@@ -1,0 +1,20 @@
+{
+  "field": "계산·생무기화학",
+  "metals": [],
+  "ligands": [],
+  "reactions": [],
+  "substrates": [],
+  "style_rules": [
+    "최초 초안은 한국어로 작성한다.",
+    "명시적 대명사 주어를 피하고 가능한 수동형으로 작성한다.",
+    "근거 중심으로 간결하게 작성하고 과장이나 상투적 결론을 피한다."
+  ],
+  "journals": [
+    "Journal of the American Chemical Society",
+    "Inorganic Chemistry",
+    "ACS Catalysis",
+    "Angewandte Chemie International Edition",
+    "Chemical Science",
+    "Dalton Transactions"
+  ]
+}

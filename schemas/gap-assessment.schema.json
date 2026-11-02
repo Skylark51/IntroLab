@@ -1,0 +1,160 @@
+{
+  "type": "object",
+  "required": [
+    "importance",
+    "novelty",
+    "experiment_link",
+    "dft_feasibility",
+    "discriminating_prediction",
+    "status",
+    "novelty_sources",
+    "followup_scope",
+    "plan"
+  ],
+  "properties": {
+    "importance": {
+      "type": "object",
+      "required": [
+        "score",
+        "reason"
+      ],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "novelty": {
+      "type": "object",
+      "required": [
+        "score",
+        "reason"
+      ],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "experiment_link": {
+      "type": "object",
+      "required": [
+        "score",
+        "reason"
+      ],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "dft_feasibility": {
+      "type": "object",
+      "required": [
+        "score",
+        "reason"
+      ],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "discriminating_prediction": {
+      "type": "object",
+      "required": [
+        "score",
+        "reason"
+      ],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "resolved",
+        "conflicting",
+        "shortlisted"
+      ]
+    },
+    "novelty_sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri",
+        "pattern": "^https?://"
+      },
+      "minItems": 1
+    },
+    "followup_scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "reactant",
+        "intermediate",
+        "transition_state",
+        "irc",
+        "spin_states"
+      ],
+      "properties": {
+        "reactant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intermediate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transition_state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "irc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spin_states": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

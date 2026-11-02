@@ -1,6 +1,7 @@
 """Minimal Crossref REST client. Metadata confirms identifiers, not scientific claims."""
 import json
 import os
+import re
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
@@ -15,7 +16,7 @@ def normalize_doi(value):
             value = value[len(prefix):]
             break
     value = value.strip().lower()
-    if not value.startswith("10.") or "/" not in value:
+    if not re.fullmatch(r'10\.\d{4,9}/\S+', value):
         raise ValueError("Invalid DOI; expected 10.xxxx/...")
     return value
 
@@ -32,7 +33,7 @@ def request_json(path, params=None):
             payload = json.load(response)
     except (HTTPError, URLError, TimeoutError, ValueError) as exc:
         raise RuntimeError(f"Crossref request failed: {exc}") from exc
-    if payload.get("status") != "ok":
+    if not isinstance(payload, dict) or payload.get("status") != "ok" or not isinstance(payload.get('message'), dict):
         raise RuntimeError("Crossref returned a non-ok response")
     return payload["message"]
 
@@ -42,8 +43,8 @@ def fetch_doi(doi):
 
 
 def search_works(query, journal, rows=10, offset=0, start_year=None, end_year=None):
-    if not 1 <= rows <= 20:
-        raise ValueError("One batch must contain between 1 and 20 records")
+    if not 5 <= rows <= 15:
+        raise ValueError("One batch must contain between 5 and 15 records")
     if not 0 <= offset <= 9999:
         raise ValueError("Crossref offset must be 0..9999")
     filters = ["type:journal-article"]
@@ -64,6 +65,8 @@ def search_works(query, journal, rows=10, offset=0, start_year=None, end_year=No
 
 
 def to_record(item):
+    if not isinstance(item, dict) or not item.get('DOI') or not item.get('title'):
+        raise ValueError('Crossref record is missing DOI/title')
     doi = normalize_doi(item["DOI"])
     year = None
     for key in ("published", "issued"):

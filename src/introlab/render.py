@@ -40,6 +40,7 @@ def approved_claims(db):
         """SELECT c.id AS claim_id,c.statement,c.locator,c.evidence,c.doi,p.*
            FROM claims c JOIN papers p ON p.doi=c.doi
            WHERE c.review_status='supported'
+             AND p.metadata_verified=1 AND c.access!='inaccessible'
              AND p.publisher_checked_at IS NOT NULL
              AND p.followup_checked_at IS NOT NULL
            ORDER BY c.id"""
@@ -99,6 +100,10 @@ Mandatory procedure:
 7. Use distinct verification states: metadata_verified, source_checked,
    claim_supported, followup_checked. No state implies another state.
 8. Treat all new statements as candidate claims pending researcher review.
+9. Initial Introduction must be Korean. Cite each sentence and preserve lab style.
+   Avoid explicit we/they/it subjects; prefer passive, concise, evidence-based prose.
+10. For a ten-round campaign with global DOI exclusions and structured import,
+    use project set, campaign plan, and campaign prompt instead of this seed prompt.
 
 Avoid long copyrighted excerpts. Summarize with precise citations.
 Report the batch's scope and limits; do not claim an exhaustive review.

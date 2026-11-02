@@ -1,0 +1,196 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "batch_id",
+    "papers"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "batch_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "papers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "doi",
+          "title",
+          "urls",
+          "relevance",
+          "ligand_match",
+          "claims"
+        ],
+        "properties": {
+          "doi": {
+            "type": "string",
+            "pattern": "^10\\.\\d{4,9}/\\S+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://"
+            },
+            "minItems": 1
+          },
+          "relevance": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ligand_match": {
+            "type": "boolean"
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "statement",
+                "kind",
+                "locator",
+                "evidence",
+                "source_url",
+                "access"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "statement": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "experimental_fact",
+                    "computed_mechanism",
+                    "interpretation",
+                    "unresolved"
+                  ]
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidence": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source_url": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https?://"
+                },
+                "access": {
+                  "enum": [
+                    "accessible",
+                    "inaccessible",
+                    "unknown"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "minItems": 5,
+      "maxItems": 15
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "target",
+          "kind",
+          "note"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "supports",
+              "contradicts",
+              "supersedes",
+              "unresolved"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "sentences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "text",
+          "claim_ids"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "question",
+          "related_dois"
+        ],
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "related_dois": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Untrusted manual ChatGPT research exchange. Runtime validation also enforces DOI uniqueness, database references, Korean sentences and candidate-only import. Unknown approval flags are never honored."
+}

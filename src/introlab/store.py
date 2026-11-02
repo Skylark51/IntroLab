@@ -65,6 +65,8 @@ def connect(path):
     db = sqlite3.connect(str(path))
     db.row_factory = sqlite3.Row
     db.executescript(SCHEMA)
+    from .workflow import migrate
+    migrate(db)
     return db
 
 
@@ -80,7 +82,8 @@ def upsert_paper(db, p):
           volume=excluded.volume,issue=excluded.issue,pages=excluded.pages,
           authors_json=excluded.authors_json,url=excluded.url,
           metadata_json=excluded.metadata_json,
-          metadata_checked_at=excluded.metadata_checked_at""",
+          metadata_checked_at=excluded.metadata_checked_at,
+          metadata_verified=1""",
         (p["doi"], p["title"], p["journal"], p["journal_abbrev"],
          p["year"], p["volume"], p["issue"], p["pages"],
          json.dumps(p["authors"], ensure_ascii=False), p["url"],
@@ -89,12 +92,12 @@ def upsert_paper(db, p):
     db.commit()
 
 
-def record_search(db, args, returned):
+def record_search(db, args, returned, dois=None, status='ok', note=''):
     db.execute(
-        """INSERT INTO searches(query,journal,start_year,end_year,offset,returned,created_at)
-        VALUES (?,?,?,?,?,?,?)""",
+        """INSERT INTO searches(query,journal,start_year,end_year,offset,returned,created_at,result_dois,status,note)
+        VALUES (?,?,?,?,?,?,?,?,?,?)""",
         (args.query, args.journal, args.from_year, args.to_year,
-         args.offset, returned, timestamp()),
+         args.offset, returned, timestamp(), json.dumps(dois or []), status, note),
     )
     db.commit()
 
@@ -105,6 +108,9 @@ def mark_checked(db, doi, kind, note):
     column = {"publisher": "publisher_checked_at", "followup": "followup_checked_at"}[kind]
     note_column = {"publisher": "publisher_note", "followup": "followup_note"}[kind]
     cursor = db.execute(f"UPDATE papers SET {column}=?, {note_column}=? WHERE doi=?", (timestamp(), note, doi))
+    if cursor.rowcount:
+        db.execute('INSERT INTO reviews(entity,entity_id,decision,note,created_at) VALUES (?,?,?,?,?)',
+                   ('paper', doi, kind, note, timestamp()))
     db.commit()
     if cursor.rowcount == 0:
         raise ValueError(f"DOI not found: {doi}")
@@ -122,23 +128,29 @@ def add_claim(db, doi, statement, locator, evidence):
 
 
 def review_claim(db, claim_id, decision, note):
+    if decision not in ('supported', 'refuted', 'uncertain'):
+        raise ValueError('Invalid claim decision')
     claim = db.execute(
-        """SELECT c.id, p.publisher_checked_at FROM claims c
+        """SELECT c.id,c.access, p.publisher_checked_at FROM claims c
            JOIN papers p ON p.doi=c.doi WHERE c.id=?""", (claim_id,)
     ).fetchone()
     if not claim:
         raise ValueError(f"Claim not found: {claim_id}")
     if decision == "supported" and not claim["publisher_checked_at"]:
         raise ValueError("Check the publisher's source before supporting a claim")
+    if decision == 'supported' and claim['access'] == 'inaccessible':
+        raise ValueError('Inaccessible source cannot support a claim')
     db.execute(
         "UPDATE claims SET review_status=?,review_note=? WHERE id=?",
         (decision, note, claim_id),
     )
+    db.execute('INSERT INTO reviews(entity,entity_id,decision,note,created_at) VALUES (?,?,?,?,?)',
+               ('claim', str(claim_id), decision, note, timestamp()))
     db.commit()
 
 
 def export_data(db):
-    result = {"format_version": 1, "exported_at": timestamp()}
-    for table in ("papers", "searches", "claims", "gaps"):
+    result = {"format_version": 2, "exported_at": timestamp()}
+    for table in ("papers", "searches", "claims", "gaps", "project", "batches", "batch_papers", "imports", "relations", "reviews", "sentences", "sentence_history", "project_results", "gap_assessments"):
         result[table] = [dict(row) for row in db.execute(f"SELECT * FROM {table} ORDER BY ROWID")]
     return result
