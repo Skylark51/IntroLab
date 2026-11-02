@@ -1,0 +1,43 @@
+# IntroLab 구현 프롬프트 — Codex에 그대로 전달
+
+당신은 계산·생무기화학 연구의 문헌조사 및 Introduction 작성을 자동화하는 개발자다. GitHub 저장소 Skylark51/IntroLab의 기존 코드를 먼저 읽고, 현재 기능을 깨지 않는 선에서 구현을 확장하라. 주 목표는 **연구자가 논문 주제를 직접 제시받는 것이 아니라, AI가 반복 브라우징으로 실제로 해결되지 않은 기전 연구 주제를 발굴하는 것**이다.
+
+## 요구사항
+
+1. 사용자가 화학 분야, 금속, 리간드, 반응 유형, 기질을 입력하면 한 번에 5–15편의 논문을 조사한다. JACS, Inorganic Chemistry, ACS Catalysis, Angewandte Chemie, Chemical Science, Dalton Transactions 및 사용자가 지정한 저널을 구별하여 독립적인 배치를 반복한다. 각 검색 날짜·기간·키워드·저널·offset·DOI·결과를 저장한다.
+2. 논문별로 실험적 사실, 계산으로 제시된 메커니즘, 해석/추측, 미해결 문제를 구분한다. 특정 단계의 TS, spin crossover, O–O/C–C cleavage 등 **구체적 mechanistic gap**만 연구 후보로 제시한다.
+3. 과거의 'mechanism remains unclear'라는 주장만으로 신규성을 단정하지 않는다. 최근까지 후속 논문, SI, 반례 및 독립 연구를 재조사한다. 해결된 기전은 후보에서 제외하고, 충돌하는 문헌은 모두 표시한다.
+4. 논문과 주장 각각에 고유 ID를 부여한다. DOI로 Crossref의 제목·저자·연도·권·페이지를 검증하고, 출판사 원문/SI의 구체적인 그림·표·페이지·문장으로 **주장 자체**를 별도 검증한다. 다른 논문으로 후속 해결 여부를 확인한다. 검토 시각, URL, 검토 메모를 보존한다.
+5. 명시적 상태를 유지한다: metadata_verified / publisher_checked / claim_supported / followup_checked. DOI가 실재한다는 사실만으로 claim_supported를 자동 승인하지 않는다. 접근 불가능한 원문은 검증 불가능으로 표시한다. 가공한 DOI, 없는 수치, 가상의 문헌은 절대 생성하지 않는다.
+6. 검증된 근거를 사용해 논리적인 Introduction을 만들고 모든 문장과 claim 및 reference를 역추적한다. 참고문헌은 JACS 형식(저자; 제목; 저널 약어; 연도; 권; 페이지/기사번호; DOI)을 기본으로 하고 최종 출판 전 스타일 검수한다. 연구자가 수정한 문장은 다음 생성 시 보존한다.
+7. 기전 공백은 중요성·신규성·실험과의 연계성·DFT 계산 가능성·차별적인 예측 가능성을 평가한다. 제안은 구체적인 reactant, intermediate, transition state, IRC, spin state의 검증 계획을 포함한다. ResultLab에서 사용할 JSON으로 내보낸다.
+
+## 기술 요구
+
+- Python 3.10+ 표준 라이브러리와 SQLite를 우선 사용한다. Windows PowerShell의 한글 경로에서 작동해야 한다. 무거운 웹 프런트엔드, 브라우저 자동화, 클라우드 DB 등은 초기에는 도입하지 않는다.
+- CLI 명령 init / discover / paper add·list·check / claim add·list·review / gap add·list / prompt / draft / bibliography / export가 작동해야 한다.
+- Crossref로 서지 메타데이터를 검증하고, 이후 OpenAlex 및 출판사 사이트 검색을 adapter로 확장할 수 있도록 설계한다. 실패해도 기존 DB를 파괴하지 않는다. DOI 중복 검색은 검토 상태를 보존해야 한다.
+- 사용자의 ChatGPT 계정에서 실제 웹브라우징을 하도록 **조사 프롬프트를 생성**한다. 사용자의 계정·메모리·쿠키를 프로그램이 임의로 가져올 수 있다고 가정하지 않는다. 먼저 ChatGPT에서 실제 웹조사 결과를 가져오는 수동 인터페이스를 제공하고, 자동 연동은 별도 API 인증/과금 및 지원 기능 확인 후 구현한다.
+- 원고는 허위 근거가 없는 초안이어야 하며, 검증 전에는 출판 가능한 완성본이라고 주장하면 안 된다. AI 특유의 과장/상투적 결론은 피하고, JACS 생무기화학 논문 특유의 간결하고 근거 중심적인 수동태 문체를 따른다.
+- 프로젝트 정보와 문헌·claim·검토 결과는 버전이 붙은 JSON으로 내보낸다. 향후 ResultLab/ConclusionLab/SILab과 연결한다.
+- GitHub Actions에서 Windows 오프라인 테스트를 실행하고 PyInstaller로 IntroLab.exe를 artifact로 업로드한다. 개발 및 실행은 Python 소스를 기본으로 하며 빌드는 선택적이다. .introlab 데이터와 비밀 키는 Git에 올리지 않는다.
+
+## 개발 단계
+
+A. 현 저장소 CLI를 실행·테스트하고, 버그와 Crossref 호출의 예외 처리를 해결한다.
+
+B. AI가 조사한 문헌·claim을 JSON으로 가져오는 importer와 schema를 만든다. 가져온 사실은 모두 후보 상태다. 인용 검증과 사람이 보는 승인 화면을 추가한다.
+
+C. 누적 문헌 간 supports / contradicts / supersedes / unresolved 관계를 만들어 아직 특정되지 않은 메커니즘을 식별한다. 동일한 문제를 다른 리간드·금속·스핀에서 다룬 선행연구도 탐색한다.
+
+D. 검증된 주장만 사용하는 Introduction 문장 생성, 수정 이력, citation map, Zotero/CSL 등 저널별 참고문헌 변환 기능을 발전시킨다.
+
+## 완료 판정 기준
+
+- 빈 폴더에서 설치·DB 생성·반복 배치 검색·DOI 등록·claim 추가·검토·draft/export가 동작한다.
+- Crossref 메타데이터만 확인한 근거는 승인된 draft에 나타나지 않는다.
+- 출판사 원문 확인, claim 검토, 후속논문 검토를 거친 주장만 초안에 포함된다.
+- 검증된 사실, 가설, 연구 공백이 섞이지 않는다.
+- 실제로 실행한 테스트와 아직 구현하지 못한 기능을 구분해 보고한다.
+
+코드를 기존 저장소에 작은 단위로 변경하고, 테스트 후 커밋한다. 사용자의 기존 논문·문체·Gaussian 계산 프로토콜을 임의로 덮어쓰지 않는다.
