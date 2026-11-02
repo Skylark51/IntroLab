@@ -1,0 +1,30 @@
+name: Build Windows CLI
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install and test
+        shell: pwsh
+        run: |
+          python -m pip install .
+          python -m unittest discover -s tests -v
+      - name: Build executable
+        shell: pwsh
+        run: |
+          python -m pip install pyinstaller
+          python -m PyInstaller --noconfirm --clean --onefile --name IntroLab tools/launcher.py
+          .\dist\IntroLab.exe --help
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IntroLab-Windows
+          path: dist/IntroLab.exe
+          if-no-files-found: error
