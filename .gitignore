@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.introlab/
+build/
+dist/
+*.spec
+.pytest_cache/
+chatgpt_research_prompt.md
+introduction_notes.md
+introlab_export.json
