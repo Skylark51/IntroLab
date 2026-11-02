@@ -1,5 +1,7 @@
 # IntroLab
 
+v0.2 manual research campaigns, JSON import, Korean sentence review and ResultLab exchange: see [WORKFLOW_KO.md](WORKFLOW_KO.md). Core runtime remains Python standard library + SQLite.
+
 Computational/bioinorganic chemistry literature research assistant.
 
 IntroLab v0.1 is a lightweight, local-first Python CLI that records journal-by-journal literature searches, verifies Crossref DOI metadata, tracks claims and source evidence, and exports research context and a ChatGPT web-research prompt.

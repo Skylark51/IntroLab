@@ -110,6 +110,10 @@ py -3 -m introlab --help
 py -3 -m unittest discover -s tests -v
 ~~~
 
+## v0.2 조사 캠페인
+
+최소 10회 조사, 중복 DOI 제외, ChatGPT JSON 가져오기, 검토 및 한국어 인용 초안은 [WORKFLOW_KO.md](WORKFLOW_KO.md)를 따른다. 기존 근거 노트는 `draft --notes`로 생성한다.
+
 ## 주의 및 확장
 
-ChatGPT 구독 요금과 OpenAI API 사용료는 별개입니다. v0.1은 API 키를 저장하거나 유료 API를 호출하지 않습니다. 다음 단계는 ChatGPT 조사 결과를 구조화해 후보 claim으로 가져오는 JSON importer, 저널별 검색 이력 시각화, 기전 공백 점수화, 실제 Introduction 문장 편집기입니다.
+API 키를 저장하거나 유료 API를 호출하지 않습니다. v0.2는 수동 JSON 가져오기, 기전 공백 평가 및 CLI 문장 편집을 지원합니다. 자동 의미 검증, 조사 이력 시각화, Zotero/CSL 변환은 추후 구현 대상입니다.
