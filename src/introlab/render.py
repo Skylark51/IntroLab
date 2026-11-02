@@ -24,7 +24,7 @@ def citation(p):
     if p["title"]:
         parts.append(p["title"].rstrip(".") + ".")
     if p["journal_abbrev"] or p["journal"]:
-        parts.append((p["journal_abbrev"] or p["journal"]) + ".")
+        parts.append((p["journal_abbrev"] or p["journal"]).rstrip(".") + ".")
     if p["year"]:
         parts.append(str(p["year"]) + ("," if p["volume"] else "."))
     if p["volume"]:
