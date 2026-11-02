@@ -25,7 +25,9 @@ CREATE TABLE IF NOT EXISTS papers (
   metadata_json TEXT NOT NULL,
   metadata_checked_at TEXT NOT NULL,
   publisher_checked_at TEXT,
-  followup_checked_at TEXT
+  publisher_note TEXT NOT NULL DEFAULT '',
+  followup_checked_at TEXT,
+  followup_note TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS searches (
   id INTEGER PRIMARY KEY,
@@ -97,9 +99,12 @@ def record_search(db, args, returned):
     db.commit()
 
 
-def mark_checked(db, doi, kind):
+def mark_checked(db, doi, kind, note):
+    if not note.strip():
+        raise ValueError("Document the reviewed URL/source or follow-up search")
     column = {"publisher": "publisher_checked_at", "followup": "followup_checked_at"}[kind]
-    cursor = db.execute(f"UPDATE papers SET {column}=? WHERE doi=?", (timestamp(), doi))
+    note_column = {"publisher": "publisher_note", "followup": "followup_note"}[kind]
+    cursor = db.execute(f"UPDATE papers SET {column}=?, {note_column}=? WHERE doi=?", (timestamp(), note, doi))
     db.commit()
     if cursor.rowcount == 0:
         raise ValueError(f"DOI not found: {doi}")
